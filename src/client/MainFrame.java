@@ -20,11 +20,9 @@ public class MainFrame extends JFrame {
         setTitle("Chess");
         //setResizable(false);
 
-        addWindowListener(new WindowAdapter()
-        {
+        addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosing(WindowEvent e)
-            {
+            public void windowClosing(WindowEvent e) {
                 System.out.println("Closed");
                 e.getWindow().dispose();
             }
@@ -112,9 +110,15 @@ class Board extends JPanel {
             rankLabel.setBounds(400, i * 50 + 25, 50, 50);
             this.add(rankLabel);
         }
-
-        
     }
+
+    // TODO: add mouse listeners
+    // onPressHandler
+    // onMoveHandler
+    // onReleaseHandler
+
+    // TODO: add chess piece images
+
 }
 
 class Square extends JPanel implements MouseListener {
@@ -124,12 +128,14 @@ class Square extends JPanel implements MouseListener {
     Color color;
     int x;
     int y;
+
     public Square(int x, int y, Color color) {
         this.x = x;
         this.y = y;
         this.color = color;
         initComponents();
     }
+
     private void initComponents() {
         setLayout(null);
         // draw the square
