@@ -9,6 +9,7 @@ class Rook extends Piece
     Rook(Color color)
     {
         super(color);
+        name = "Rook";
     }
 
     @Override

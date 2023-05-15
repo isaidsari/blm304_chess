@@ -1,5 +1,8 @@
 package client;
 
+import chess.Board;
+import chess.Piece;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -39,6 +42,7 @@ public class MainFrame extends JFrame {
         );
 
         // draw the board
+
         BoardPanel boardPanel = new BoardPanel(client);
         boardPanel.setBounds(0, 0, 400, 400);
         this.add(boardPanel);
@@ -47,35 +51,15 @@ public class MainFrame extends JFrame {
     }
 }
 
+
 class BoardPanel extends JPanel {
 
     Client client;
+    Square[][] squares;
 
     public BoardPanel(Client client) {
         this.client = client;
         initComponents();
-    }
-
-    private void initComponents() {
-
-        setLayout(null);
-
-        // draw the board
-        Board board = new Board(client);
-        board.setBounds(0, 0, 400, 400);
-        this.add(board);
-    }
-
-}
-
-class Board extends JPanel {
-
-    Client client;
-    JPanel[][] squares = new JPanel[8][8];
-
-    public Board(Client client) {
-        this.client = client;
-        initComponents();
 
     }
 
@@ -83,6 +67,7 @@ class Board extends JPanel {
 
         setLayout(null);
 
+        squares = new Square[8][8];
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -110,12 +95,37 @@ class Board extends JPanel {
             rankLabel.setBounds(400, i * 50 + 25, 50, 50);
             this.add(rankLabel);
         }
+
+        drawBoard(client.board);
+    }
+
+    void drawBoard(Board board) {
+        for (int i = 0; i < Board.SIZE; i++) {
+            for (int j = 0; j < Board.SIZE; j++) {
+
+                Piece piece = board.pieceAt(new Point(i, j));
+                String color = "";
+
+                if (board.pieceAt(new Point(i, j)) != null) {
+                    if (piece.color == Color.WHITE) {
+                        color = "white";
+                    } else if (piece.color == Color.BLACK){
+                        color = "black";
+                    }
+                    squares[i][j].setImage("src\\client\\images\\" + piece.name.toLowerCase() + "_" + color + ".png");
+                }
+            }
+        }
+
     }
 
     // TODO: add mouse listeners
-    // onPressHandler
-    // onMoveHandler
-    // onReleaseHandler
+    void onPressHandler() {
+    }
+    void onMoveHandler() {
+    }
+    void onReleaseHandler() {
+    }
 
     // TODO: add chess piece images
 
@@ -126,6 +136,7 @@ class Square extends JPanel implements MouseListener {
     static final Color SQ_WHITE = new Color(215, 215, 229);
     static final Color SQ_BLACK = new Color(43, 45, 66);
     Color color;
+    JLabel imageLabel;
     int x;
     int y;
 
@@ -144,8 +155,16 @@ class Square extends JPanel implements MouseListener {
         } else {
             setBackground(SQ_BLACK);
         }
-
         addMouseListener(this);
+        // add image
+        imageLabel = new JLabel();
+        add(imageLabel);
+        //setImage("src\\client\\images\\pawn_white.png");
+    }
+
+    public void setImage(String path) {
+        imageLabel.setBounds(2, 2, 45, 45);
+        imageLabel.setIcon(new ImageIcon(path));
     }
 
     // on click, change color

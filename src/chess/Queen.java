@@ -4,11 +4,12 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-class Queen extends Piece
+public class Queen extends Piece
 {
     Queen(Color color)
     {
         super(color);
+        name = "Queen";
     }
 
     @Override

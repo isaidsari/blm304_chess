@@ -9,6 +9,7 @@ class King extends Piece
     King(Color color)
     {
         super(color);
+        name = "King";
     }
 
     @Override

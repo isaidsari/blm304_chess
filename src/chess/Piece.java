@@ -3,9 +3,11 @@ package chess;
 import java.awt.*;
 import java.util.List;
 
-abstract class Piece
+public abstract class Piece
 {
-    Color color;
+    public String name;
+    public Color color;
+
     Piece(Color color)
     {
         this.color = color;

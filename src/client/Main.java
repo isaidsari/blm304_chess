@@ -3,6 +3,7 @@ package client;
 public class Main {
     public static void main(String[] args) {
         Client client = new Client("localhost", 5000);
+        client.board = new chess.Board();
         System.out.print("Client started\n");
         new MainFrame(client).setVisible(true);
         Runtime.getRuntime().addShutdownHook(new Thread() {

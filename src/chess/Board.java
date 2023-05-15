@@ -2,14 +2,14 @@ package chess;
 
 import java.awt.*;
 
-class Board
+public class Board
 {
 
-    static final int SIZE = 8;
+    public static final int SIZE = 8;
 
     Square[][] squares;
 
-    Board()
+    public Board()
     {
         initializeBoard();
     }
@@ -44,7 +44,7 @@ class Board
             squares[6][i].piece = new Pawn(Color.WHITE);
     }
 
-    Piece pieceAt(Point point)
+    public Piece pieceAt(Point point)
     {
         return squares[point.y][point.x].piece;
     }

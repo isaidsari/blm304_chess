@@ -1,5 +1,7 @@
 package client;
 
+import chess.Board;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -9,6 +11,8 @@ class Client extends Thread
     Socket socket;
     BufferedReader reader;
     OutputStreamWriter writer;
+
+    Board board;
 
     Client(String host, int port)
     {

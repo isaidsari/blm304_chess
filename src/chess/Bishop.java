@@ -9,6 +9,7 @@ class Bishop extends Piece
     Bishop(Color color)
     {
         super(color);
+        name = "Bishop";
     }
 
     @Override

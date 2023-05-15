@@ -9,6 +9,7 @@ class Knight extends Piece
     Knight(Color color)
     {
         super(color);
+        name = "Knight";
     }
 
     @Override
