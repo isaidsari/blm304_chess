@@ -11,6 +11,14 @@ public class Square
     {
         this.column = column;
         this.row = row;
+        this.piece = null;
+    }
+
+    Square(char column, int row, Piece piece)
+    {
+        this.column = column;
+        this.row = row;
+        this.piece = piece;
     }
 
 }

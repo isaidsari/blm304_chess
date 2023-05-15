@@ -2,12 +2,28 @@ package chess;
 
 import java.awt.*;
 
-class Chess
+public class Chess
 {
 
-    Board board;
+    public Board board;
 
-    Color turn;
+    public Color turn;
+
+    public Chess()
+    {
+        board = new Board();
+        turn = Color.WHITE;
+    }
+
+    public void move(Point from, Point to)
+    {
+        if (board.pieceAt(from).color == turn)
+        {
+            board.move(from, to);
+            turn = (turn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        }
+    }
+
 
 
 }

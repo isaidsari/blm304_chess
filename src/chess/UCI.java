@@ -1,0 +1,6 @@
+package chess;
+
+class UCI
+{
+
+}
