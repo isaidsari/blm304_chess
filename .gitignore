@@ -52,3 +52,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### chess engine ###
+/stockfish_15.1_win_x64_avx2

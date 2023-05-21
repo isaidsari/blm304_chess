@@ -6,64 +6,69 @@ import chess.Piece;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 
 public class MainFrame extends JFrame {
 
     Client client;
+    BoardPanel boardPanel;
 
     public MainFrame(Client client) {
         this.client = client;
         initComponents();
         setSize(420, 440);
+
+        client.hook = this::updateBoard;
     }
 
     private void initComponents() {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Chess Client");
-        //setResizable(false);
+        setResizable(false);
 
-        // set icon
         ImageIcon icon = new ImageIcon("src\\client\\images\\icon.jpg");
         setIconImage(icon.getImage());
 
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                super.windowClosing(e);
-            }
-        });
+        boardInit();
+        updateBoard();
+        pack();
+    }
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+
+    void boardInit()
+    {
+        GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
 
         layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
         );
         layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
         );
 
-        // draw the board
-
-        BoardPanel boardPanel = new BoardPanel(client);
+        boardPanel = new BoardPanel(client);
         boardPanel.setBounds(0, 0, 400, 400);
         this.add(boardPanel);
+    }
 
-        pack();
+    public void updateBoard()
+    {
+        boardPanel.drawBoard(client.board);
     }
 }
-
 
 class BoardPanel extends JPanel {
 
     Client client;
     Square[][] squares;
 
+    Square lastClick;
+
     public BoardPanel(Client client) {
         this.client = client;
         initComponents();
-
     }
 
     private void initComponents() {
@@ -74,41 +79,27 @@ class BoardPanel extends JPanel {
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                Square square = new Square(i, j, (i + j) % 2 == 0 ? Color.WHITE : Color.BLACK);
+                Square square = new Square(new Point(i,j), (i + j) % 2 == 0 ? Color.WHITE : Color.BLACK);
                 square.setBounds(i * 50, j * 50, 50, 50);
                 this.add(square);
                 square.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        //super.mouseClicked(e);
-                        //client.clickSquare(square.x, square.y);
-                        //System.out.println("Clicked");
-                        ((Square)e.getSource()).onClick();
+                        onPressHandler(e);
                     }
 
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        //super.mousePressed(e);
-                        //client.clickSquare(square.x, square.y);
-                        //((Square)e.getSource()).onClick();
-                        //System.out.println("Pressed");
                     }
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        //super.mouseReleased(e);
-                        //client.clickSquare(square.x, square.y);
-                        //((Square)e.getSource()).onRelease();
+                        Square s = (Square)e.getSource();
+                        s.onRelease();
                     }
 
                 });
-                square.addMouseMotionListener(new MouseMotionAdapter() {
-                    @Override
-                    public void mouseDragged(MouseEvent e) {
-                        super.mouseDragged(e);
-                        onMoveHandler(e);
-                    }
-                });
+
                 squares[i][j] = square;
 
             }
@@ -125,18 +116,24 @@ class BoardPanel extends JPanel {
             this.add(rankLabel);
         }
 
-        drawBoard(client.board);
-        drawPossibleMoves(new Point[]{new Point(0, 0), new Point(1, 1)});
     }
 
     void drawBoard(Board board) {
+        // reset all squares
+        for (Square[] row : squares) {
+            for (Square square : row) {
+                square.reset();
+                square.onRelease();
+            }
+        }
+
         for (int i = 0; i < Board.SIZE; i++) {
             for (int j = 0; j < Board.SIZE; j++) {
 
                 Piece piece = board.pieceAt(new Point(i, j));
                 String color = "";
 
-                if (board.pieceAt(new Point(i, j)) != null) {
+                if (piece != null) {
                     if (piece.color == Color.WHITE) color = "white";
                     else if (piece.color == Color.BLACK) color = "black";
                     squares[i][j].setImage("src\\client\\images\\" + piece.name.toLowerCase() + "_" + color + ".png");
@@ -151,49 +148,52 @@ class BoardPanel extends JPanel {
         }
     }
 
-    // TODO: add mouse listeners
     void onPressHandler(MouseEvent e) {
+        Square s = (Square)e.getSource();
+        s.onClick();
+
+        if (lastClick == null) {
+            lastClick = s;
+            return;
+        }
+
+        if (lastClick == s) {
+            lastClick = null;
+            s.onRelease();
+            return;
+        }
+
+        client.move(lastClick.point, s.point);
+        lastClick = null;
     }
     void onMoveHandler(MouseEvent e) {
     }
     void onReleaseHandler(MouseEvent e) {
     }
 
-    // TODO: add chess piece images
-
 }
 
-class Square extends JPanel implements MouseListener {
+class Square extends JPanel {
 
     static final Color SQ_WHITE = new Color(215, 215, 229);
     static final Color SQ_BLACK = new Color(43, 45, 66);
     Color color;
     JLabel imageLabel;
-    int x;
-    int y;
+    Point point;
 
-    public Square(int x, int y, Color color) {
-        this.x = x;
-        this.y = y;
+    public Square(Point point, Color color) {
+        this.point = point;
         this.color = color;
         initComponents();
     }
 
     private void initComponents() {
         setLayout(null);
-        // draw the square
-        if (color == Color.WHITE) {
-            setBackground(SQ_WHITE);
-        } else {
-            setBackground(SQ_BLACK);
-        }
-        // add image
+
+        setBackground(color == Color.WHITE ? SQ_WHITE : SQ_BLACK);
+
         imageLabel = new JLabel();
         add(imageLabel);
-        //setImage("src\\client\\images\\pawn_white.png");
-
-        // add mouse listener
-        addMouseListener(this);
     }
 
     public void setImage(String path) {
@@ -206,46 +206,17 @@ class Square extends JPanel implements MouseListener {
         imageLabel.setIcon(new ImageIcon(path));
     }
 
-    // on click, change color
-    public void onClick() {
-        if (color == Color.WHITE) {
-            setBackground(new Color(215, 233, 229));
-        } else {
-            setBackground(new Color(43, 65, 66));
-        }
+    public void reset() {
+        imageLabel.setIcon(null);
+    }
 
+    public void onClick() {
+        setBackground(color == Color.WHITE ? new Color(215, 233, 229) : new Color(43, 65, 66));
+        System.out.println(this.point);
     }
 
     public void onRelease() {
-        if (color == Color.WHITE) {
-            setBackground(SQ_WHITE);
-        } else {
-            setBackground(SQ_BLACK);
-        }
-    }
-
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
+        setBackground(color == Color.WHITE ? SQ_WHITE : SQ_BLACK);
     }
 
 }
-

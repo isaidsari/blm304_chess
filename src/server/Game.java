@@ -3,43 +3,79 @@ package server;
 import chess.Chess;
 
 import java.io.IOException;
+import java.util.List;
 
+class Game extends Thread {
 
-class Game {
-
+    static int id;
     Player white;
     Player black;
 
     Chess chess;
 
-    Game(Player white, Player black) {
+    List<Game> list;
+
+    Game(Player white, Player black, List<Game> list) {
         this.white = white;
         this.black = black;
 
         this.chess = new Chess();
 
-        new Thread(() -> handlePlayer(white)).start();
-        new Thread(() -> handlePlayer(black)).start();
+        white.client.send("game_id:"+id);
+        black.client.send("game_id:"+id);
+
+        white.client.send("color:white");
+        black.client.send("color:black");
+
+        white.client.send("start");
+        black.client.send("start");
+
+        id++;
     }
 
-    void handlePlayer(Player player) {
+    @Override
+    public void run() {
+        System.out.println("game started");
+        String whiteMove, blackMove;
         try {
-
             while (true) {
-                String message = player.client.reader.readLine();
+                whiteMove = white.client.reader.readLine();
 
-                if (message == null) {
-                    // Connection closed
+                if (whiteMove.equals("exit")) {
+                    System.out.println("white player exited");
+                    black.client.send("exit");
                     break;
                 }
+                System.out.println("White player's move: " + whiteMove);
 
-                // Process the received message
-                System.out.println("Received message from client: " + message);
+                // Send white player's move to black player
+                black.client.writer.write(whiteMove + "\n");
+                black.client.writer.write("your_turn\n");
+                black.client.writer.flush();
+
+                // Wait for black player's move
+                blackMove = black.client.reader.readLine();
+                if (blackMove.equals("exit")) {
+                    System.out.println("black player exited");
+                    white.client.send("exit");
+                    break;
+                }
+                System.out.println("Black player's move: " + blackMove);
+
+                // Send black player's move to white player
+                white.client.writer.write(blackMove + "\n");
+                white.client.writer.write("your_turn\n");
+                white.client.writer.flush();
             }
 
-        } catch (Exception e) {
+            // remove the game from the list
+            list.remove(this);
+
+        } catch (Exception e)
+        {
             e.printStackTrace();
         }
+
     }
 
 }

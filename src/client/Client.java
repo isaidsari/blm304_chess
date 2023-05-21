@@ -2,6 +2,8 @@ package client;
 
 import chess.Board;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 
@@ -12,7 +14,10 @@ class Client extends Thread
     BufferedReader reader;
     OutputStreamWriter writer;
 
+    Color color;
     Board board;
+
+    Runnable hook;
 
     Client(String host, int port)
     {
@@ -29,8 +34,9 @@ class Client extends Thread
         catch (IOException e)
         {
             System.out.println("Could not connect to server.");
-            // TODO: add try again option
-            //e.printStackTrace();
+            // pop up dialog box
+            JOptionPane.showMessageDialog(null, "Could not connect to server.", "Error", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
         }
         catch (Exception e)
         {
@@ -44,6 +50,31 @@ class Client extends Thread
     {
         System.out.println("Client started. Client: " + socket.getLocalSocketAddress() + " --> Server: " + socket.getRemoteSocketAddress());
         try {
+            String command;
+
+            command = reader.readLine();
+            System.out.println(command);
+            command = reader.readLine();
+            this.color = (command.split(":")[1].equals("white")) ? Color.WHITE : Color.BLACK;
+            System.out.println(command + " | " + color);
+            JOptionPane.showMessageDialog(null, "You are playing as " + (command.split(":")[1]), "Game Found", JOptionPane.INFORMATION_MESSAGE);
+
+            command = reader.readLine();
+            System.out.println(command);
+
+            while (true)
+            {
+                command = reader.readLine();
+                System.out.println(command);
+                if (command.startsWith("move:")) parseMove(command.substring("move:".length()));
+
+                if (command.equals("exit")) {
+                    System.out.println("opponent exited");
+                    JOptionPane.showMessageDialog(null, "Opponent exited", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+                    break;
+                }
+
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,6 +85,7 @@ class Client extends Thread
     {
         try
         {
+            writer.write("exit\n");
             if (reader != null)
                 reader.close();
             if (writer != null)
@@ -69,12 +101,51 @@ class Client extends Thread
         }
     }
 
-    public void clickSquare(int x, int y)
+    public void move(Point from, Point to)
     {
-        // convert to a4 notation
-        char file = (char) (x + 97);
-        int rank = 8 - y;
+        if (board.pieceAt(from) == null)
+            return;
 
-        System.out.println("Clicked: " + file + rank);
+        if (board.pieceAt(from).color != color)
+            return;
+
+        if (!board.move(from, to))
+            return;
+
+        try {
+            writer.write("move:"+convertToFileRank(from)+convertToFileRank(to)+"\n");
+            System.out.println("move:"+convertToFileRank(from)+convertToFileRank(to));
+            writer.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        hook.run();
     }
+
+    void parseMove(String move)
+    {
+        System.out.println("parse move : " + move);
+        if (move.length() != 4) {
+            //throw new IllegalArgumentException("Invalid notation format");
+        }
+
+        int fromX = Character.toLowerCase(move.charAt(0)) - 'a';
+        int fromY = 8 - Character.getNumericValue(move.charAt(1));
+        int toX = Character.toLowerCase(move.charAt(2)) - 'a';
+        int toY = 8 - Character.getNumericValue(move.charAt(3));
+
+        Point from, to;
+        from = new Point(fromX, fromY);
+        to = new Point(toX, toY);
+
+        board.move(from, to);
+        hook.run();
+    }
+
+    String convertToFileRank(Point point)
+    {
+        return (char) (point.x + 97) + String.valueOf(8 - point.y);
+    }
+
 }
